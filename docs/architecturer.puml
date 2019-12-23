@@ -3,7 +3,7 @@
 package "inmem" {
     class InMemoryInvoiceRepository {
         invoices: []*domain.Invoice
-        SelectSatisfying(*DelinquentInvoiceSpecification): ([]*Invoice, error)
+        SelectSatisfying(InvoiceSpecification): ([]*Invoice, error)
         SelectWhereGracePeriodPast(time.Time): ([]*Invoice, error)
         whereGracePeriodPastSQL(time.Time): string
     }
@@ -22,13 +22,16 @@ package "app" {
 
 package "domain" {
     interface InvoiceRepository {
-        SelectSatisfying(spec *DelinquentInvoiceSpecification) ([]*Invoice, error)
+        SelectSatisfying(spec InvoiceSpecification) ([]*Invoice, error)
         SelectWhereGracePeriodPast(aDate time.Time) ([]*Invoice, error)
     }
     class Invoice {
         ID: string
         Total: int
         DueDate: time.Time
+    }
+    interface InvoiceSpecification {
+        SatisfyingElementsFrom(InvoiceRepository): ([]*Invoice, error)
     }
     class DelinquentInvoiceSpecification {
         currentDate: time.Time
@@ -38,9 +41,11 @@ package "domain" {
     InvoiceRepository <|-- InMemoryInvoiceRepository
     InvoiceRepository <-- ListGracePeriodPastInvoiceUseCase
     InvoiceRepository <-- DelinquentInvoiceSpecification
-    DelinquentInvoiceSpecification <-- InvoiceRepository
-    DelinquentInvoiceSpecification <-- InMemoryInvoiceRepository
+    InvoiceRepository <-- InvoiceSpecification
+    InvoiceSpecification <-- InvoiceRepository
+    InvoiceSpecification <-- InMemoryInvoiceRepository
     DelinquentInvoiceSpecification <-- ListGracePeriodPastInvoiceUseCase
+    InvoiceSpecification <|-- DelinquentInvoiceSpecification
     Invoice <-- ListGracePeriodPastInvoiceUseCase
     Invoice <-- InMemoryInvoiceRepository
 }

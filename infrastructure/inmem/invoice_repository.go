@@ -52,6 +52,6 @@ func (i *InMemoryInvoiceRepository) whereGracePeriodPastSQL(aDate time.Time) str
  AND INVOICE.DUE_DATE + CUSTOMER.GRACE_PERIOD < ` + aDate.Format("2006-01-02T15:04:05")
 }
 
-func (i *InMemoryInvoiceRepository) SelectSatisfying(spec *domain.DelinquentInvoiceSpecification) ([]*domain.Invoice, error) {
+func (i *InMemoryInvoiceRepository) SelectSatisfying(spec domain.InvoiceSpecification) ([]*domain.Invoice, error) {
 	return spec.SatisfyingElementsFrom(i)
 }
