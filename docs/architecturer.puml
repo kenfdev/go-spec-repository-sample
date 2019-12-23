@@ -1,0 +1,47 @@
+@startuml
+
+package "inmem" {
+    class InMemoryInvoiceRepository {
+        invoices: []*domain.Invoice
+        SelectSatisfying(*DelinquentInvoiceSpecification): ([]*Invoice, error)
+        SelectWhereGracePeriodPast(time.Time): ([]*Invoice, error)
+        whereGracePeriodPastSQL(time.Time): string
+    }
+}
+
+package "app" {
+    class ListGracePeriodPastInvoiceUseCase {
+        repository domain.InvoiceRepository
+        Execute(): (*ListGracePeriodPastInvoiceResponse, error)
+    }
+    class ListGracePeriodPastInvoiceResponse {
+        Invoices []*domain.Invoice
+    }
+    ListGracePeriodPastInvoiceResponse <-- ListGracePeriodPastInvoiceUseCase
+}
+
+package "domain" {
+    interface InvoiceRepository {
+        SelectSatisfying(spec *DelinquentInvoiceSpecification) ([]*Invoice, error)
+        SelectWhereGracePeriodPast(aDate time.Time) ([]*Invoice, error)
+    }
+    class Invoice {
+        ID: string
+        Total: int
+        DueDate: time.Time
+    }
+    class DelinquentInvoiceSpecification {
+        currentDate: time.Time
+        SatisfyingElementsFrom(InvoiceRepository): ([]*Invoice, error)
+    }
+
+    InvoiceRepository <|-- InMemoryInvoiceRepository
+    InvoiceRepository <-- ListGracePeriodPastInvoiceUseCase
+    InvoiceRepository <-- DelinquentInvoiceSpecification
+    DelinquentInvoiceSpecification <-- InvoiceRepository
+    DelinquentInvoiceSpecification <-- InMemoryInvoiceRepository
+    DelinquentInvoiceSpecification <-- ListGracePeriodPastInvoiceUseCase
+    Invoice <-- ListGracePeriodPastInvoiceUseCase
+    Invoice <-- InMemoryInvoiceRepository
+}
+@enduml
